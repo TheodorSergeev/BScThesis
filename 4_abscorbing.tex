@@ -1,0 +1,478 @@
+\section{Поглощающие граничные условия} \label{sec:absorbing}
+
+При моделировании волновых процессов в геофизике зачастую приходится иметь дело с неограниченными физическими областями, в которых выделяются конечные расчётные под-области. Волны упругости, выходя за границу такой под-области, продолжает распространяться по неограниченной области, не оказывая влияния на процессы, происходящие внутри расчётной под-области. Для обеспечения такого поведения на практике, необходим ввод специальных условий на границах расчётных под-областей.
+
+В данной главе будут рассмотрены поглощающие граничные условия Mur и PML для систем уравнений акустики и уравнений линейной теории упругости в двумерном случае. 
+
+\subsection{Виды поглощающих граничных условий}
+
+Существует три основных подхода для реализации поглощающих граничных условий: (http://129.67.184.129/trefethen/6all.pdf)
+(Computational-Simulation-in-Architectural-and-Environmental-Acoustics-Methods-and-Applications-of-Wave-Based-Computation.pdf
+)
+\begin{enumerate}
+    \item  Введение новых пространственных переменных, которые переводят неограниченную рассматриваемую область в ограниченную. На этот подход можно посмотреть и с "физической" стороны, рассматривая дискретизацию неограниченного региона сеткой с бесконечно возрастающим по мере удаления от рассматриваемой под-области шагом сетки.
+    \item Анализ соотношений между падающей и отражённой волной и постановка граничного условия соответствующего минимизации отражённой части.
+    \item Добавление к рассматриваемой ограниченной области новых граничных слоёв, в которых дополнительно вводится диссипативный член, растущий по мере удаления от рассматриваемой области.
+\end{enumerate}
+
+В данной работе мы будем обращаться к последним двум подходам, представленным соответственно граничными условиями Mur и PML. Начнём их рассмотрение 
+
+\subsection{Уравнения акустики}
+
+Система уравнений акустики описывает распространение малых колебаний в идеальном газе и является следствием уравнений Эйлера. В двумерном случае она имеет вид:
+
+\begin{equation}
+\begin{dcases}
+	\frac{\partial u}{\partial t} = -\frac{1}{\rho}\frac{\partial p}{\partial x} \\
+	\frac{\partial v}{\partial t} = -\frac{1}{\rho}\frac{\partial p}{\partial y} \\
+    \frac{\partial p}{\partial t} = -\rho c^2 \left(\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}\right) \\
+\end{dcases}
+\label{eq:acoustic}
+\end{equation}
+
+Здесь $x$ и $y$ --- координаты в ортонормированной декартовой системе координат, $u(x,y,t)$ и $v(x,y,t)$ --- скорости, $p$ --- давление, $\rho$ --- плотность, $c$ --- скорость звука. Также можно ввести $\kappa = \rho c^2$ --- объёмный модуль упругости.
+
+Решение системы будем рассматривать в моменты времени $t \in [0, T]$ в прямоугольной области $\Gamma := \{(x,y) ~|~ (x,y) \in [0, X]\times [0, Y]\}$.
+
+Для краткости записи введём векторную переменную  
+\begin{equation}
+	\varphi = \begin{pmatrix} u \\ v \\ p \end{pmatrix}
+\end{equation}
+
+Тогда начальное условие и граничные условия запишутся в следующем виде
+\begin{equation}
+    \varphi(x,y,0) = \varphi(x,y) ,\qquad (x,y) \in \Gamma
+    \label{eq:phi}
+\end{equation}
+
+\begin{equation}
+\begin{dcases}
+    \varphi(0,y,t) = \varphi_L (y,t) , & y \in [0,Y]\\
+    \varphi(X,y,t) = \varphi_R (y,t) , & y \in [0,Y]\\
+    \varphi(x,0,t) = \varphi_T (x,t) , & x \in [0,X]\\
+    \varphi(x,Y,t) = \varphi_B (x,t) , & x \in [0,X]
+\end{dcases}
+\end{equation}
+
+Здесь и далее решение дискретной задачи будем рассматривать на регулярной прямоугольной сетке с размером шага $h_x$ и $h_y$ соответственно. Для простоты будем считать, что физические размеры рассматриваемой прямоугольной области нацело делятся на шаг сетки: $X=N h_x$, $Y = M h_y$, $N,M \in \mathbb{N}$. Таким образом разностная сетка определяется как $G := \{(x_i, y_j) ~|~ x_i = ih_x, i \in \overline{0,N}, y_j = jh_y, j \in \overline{0,M} \}$. Шаг по времени будем считать постоянным и равным $\tau$.
+
+\subsection{Поглощающие граничное условие MUR}
+
+Рассмотрим одномерное волновое уравнение
+\begin{equation}
+    \dfrac{\partial^2 u}{\partial x^2} - \dfrac{1}{c^2}\dfrac{\partial^2 u}{\partial t^2} = 0
+    \label{eq:1d_wave_eq}
+\end{equation}
+
+Разложим его на два уравнения переноса
+\begin{equation}
+    \dfrac{\partial u}{\partial x} - \dfrac{1}{c} \dfrac{\partial u}{\partial t} = 0
+    \label{eq:left_wave}
+\end{equation}
+\begin{equation}
+    \dfrac{\partial u}{\partial x} + \dfrac{1}{c} \dfrac{\partial u}{\partial t} = 0
+    \label{eq:right_wave}
+\end{equation}
+
+Уравнение \ref{eq:left_wave} соответствует волне, идущей влево по оси x, а уравнение \ref{eq:right_wave} --- идущей вправо.
+
+Пусть рассматриваемая область представляет собой отрезок $\Gamma := [0, N h_x]$. Поставим поглощающее граничное условие на правом конце. Для этого необходимо, чтобы отсутствовала отражённая волна, распространяющаяся влево. В таком случае, на правой границе должно выполняться только уравнение \ref{eq:right_wave}, а не полное волновое уравнение \ref{eq:1d_wave_eq}.
+
+\begin{equation}
+    \dfrac{\partial u}{\partial x} = -\dfrac{1}{c} \dfrac{\partial u}{\partial t}
+\end{equation}
+
+Для того, чтобы при дискретизации производная по времени и производная по пространственной координате были вычислены в одной точке, будем усреднять разностные производные в моменты времени $n$ и $n+1$, получая таким образом решение в точке $x = (N-1/2)h_x$, $t=(n+1/2)\tau$.
+
+%https://w3.pppl.gov/m3d/1dwave/ln_fdtd_1d.pdf
+
+\begin{equation}
+    \dfrac{1}{2} \left(\dfrac{u^n_N - u^n_{N-1}}{h_x} + \dfrac{u^{n+1}_N - u^n_{N-1}}{h_y} \right) = -\dfrac{1}{c} \dfrac{1}{2}\left(\dfrac{u^{n+1}_N - u^n_N}{\tau} + \dfrac{u^{n+1}_{N-1} + u^{n+1}_{N-1}}{\tau} \right)
+\end{equation}
+
+Обозначая $r = c\dfrac{\tau}{h_x}$, получаем явное выражение для граничного условия
+
+\begin{equation}
+    u^{n+1}_N = u^n_{N-1} + \dfrac{r-1}{r+1}(u^{n+1}{N-1}-u^n_N)
+\end{equation}
+
+В одномерном случае поглощающее условие Mur является точным. Распространить его можно и на двухмерный случай
+
+\begin{equation}
+    u^{n+1}_{N,j} = u^n_{N-1,j} + \dfrac{r-1}{r+1}(u^{n+1}{N-1,j}-u^n_{N,j})
+\end{equation}
+
+Однако в этом случае, если волна падает на границу не строго нормально, то будут возникать паразитные отражённые волны.
+
+\subsection{Beringer PML}
+
+Поглощающее граничное условие \textit{perfectly matched layer} (PML) впервые было введено Берингером для системы уравнений Максвелла, описывающих распространение электромагнитных волн. Однако оказывается, что, произведя необходимые замены переменных, эту систему уравнений можно свести к системе уравнений акустики \ref{eq:acoustic}.
+%https://www.researchgate.net/publication/222488665_Absorbing_PML_boundary_layers_for_wave-like_equations
+
+Для реализации затухания в PML слое добавляются диссипативные слагаемые $c u \sigma_x(x,y)$ и $c u \sigma_y(x,y)$, где в качестве функций $\sigma_{x/y}$ обычно выбирают
+
+\begin{gather}
+	\sigma_x = \left(\frac{d_x}{w_{x}}\right)^k \Sigma_{x}\\
+	\sigma_y = \left(\frac{d_y}{w_{y}}\right)^k \Sigma_{y}
+\end{gather}
+    
+здесь $d_{x/y}(x,y)$ --- глубина проникновения в PML слой, имеющий глубину $w_{x/y}$, $k$ --- степень скорости роста , $\Sigma_{x/y}$ --- максимальные значения диссипативных слагаемых\footnote{Глубина проникновения в PML слой очевидно меньше ширины слоя, а значит множитель перед $\Sigma_{x/y}$ лежит в пределах от 0 до 1. Значит $\sigma_{x/y}$ лежит в пределах от 0 до $\Sigma_{x/y}$.}. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[trim={72pt 325pt 430pt 55pt},clip,width=0.5\textwidth]{images/pml/pml_scheme.png}
+    \caption{Схема правого и верхнего PML слоёв.}
+    \label{fig:pml_scheme}
+\end{figure}
+
+Значения параметров $k$ и $\Sigma_{x,y}$ обычно подбираются под конкретную задачи из эмпирических соображений для наиболее эффективной реализации поглощающего граничного условия.
+
+В случае применения PML на всех четырёх границах прямоугольной области $\Gamma$ ($i$, $j$ --- номер соответствующего узла; $N$, $M$ --- общее количество узлов по оси абсцисс и ординат соответственно):
+    
+\begin{gather}
+	d_x = h_x \cdot \min\{i, N - i\} \\
+	d_y = h_y \cdot \min\{j, M - j\}  
+\end{gather}
+    
+Система уравнений акустики c диссипативными членами имеет вид \cite{pml-wave}:
+    
+\begin{equation}
+	\begin{dcases}
+		\frac{\partial u}{\partial t} + c\sigma_x u = -\frac{1}{\rho}\frac{\partial p}{\partial x} \\
+		\frac{\partial v}{\partial t} + c\sigma_y u = -\frac{1}{\rho}\frac{\partial p}{\partial y} \\
+	    \frac{\partial p}{\partial t} + c(\sigma_x + \sigma_y) p = -\rho c^2 \left(\frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}\right) - \rho c^2 \sigma_x \frac{\partial Q}{\partial y} - \rho c^2 \sigma_y \frac{\partial P}{\partial x} \\
+	    \frac{\partial Q}{\partial t} = cv \\
+	    \frac{\partial P}{\partial t} = cu
+	\end{dcases}\label{eq:pml} 
+\end{equation}
+    
+где $Q$ и $P$ --- дополнительные переменные, определяющиеся из последних двух уравнений.
+    
+\subsection{Split-field PML}
+
+Другим классическим вариантом граничного условия PML является так называемый \textit{split-field PML}
+
+\begin{equation}
+	\begin{dcases}
+	    \left(\frac{\partial}{\partial t} + \sigma_x(x)\right) p_1 + \kappa \frac{\partial}{\partial x} v_x = 0 \\
+	    \left(\frac{\partial}{\partial t} + \sigma_y(y)\right) p_2 + \kappa \frac{\partial}{\partial y} v_y = 0 \\
+	    \left(\frac{\partial}{\partial t} + \sigma_x(x)\right) v_x + \frac{1}{\rho} \frac{\partial}{\partial x} p = 0 \\
+	    \left(\frac{\partial}{\partial t} + \sigma_y(y)\right) v_y + \frac{1}{\rho} \frac{\partial}{\partial y} p = 0 \\
+	    p = p_1 + p_2
+	\end{dcases}\label{eq:split_pml} 
+\end{equation}
+    
+где, напомним,  $\kappa = \rho c^2$ --- объёмный модуль упругости. Функции $\sigma_{x/y}$ выбираются аналогично случаю Beringer PML.
+
+В системе \ref{eq:split_pml} давление $p$ разделяется на  компоненты $p_1$ и $p_2$. В начальный момент времени они определяются как половины общего значения давления $p$: $p_1(x,y,t=0) = p_2(x,y,t=0) = \frac{p(x,y)}{2}$. В дальнейшем $p_1$ и $p_1$ определяются из численных уравнений, а $p$ вычисляется после каждой итерации, как сумма $p_1$ и $p_2$. 
+    
+\subsection{Решение PML-систем методом конечных разностей}
+    
+Аналогично разностной схеме \eqref{eq:diff} для системы уравнений  акустики, заменяя аналитические производные на разностные, получим системы разностных уравнений для Beringer PML \ref{eq:pml}
+    
+\begin{equation}
+	\begin{dcases}
+		\frac{u^{n+1}_{i,j} - u^{n}_{i,j}}{\Delta t} + c \sigma_{x_{i}} u^{n} = -\frac{1}{\rho}\frac{p^{n+1/2}_{i+1/2,j} - p^{n+1/2}_{i-1/2,j}}{\Delta x} \\
+		\frac{v^{n+1}_{i,j} - v^{n}_{i,j}}{\Delta t} + c \sigma_{y_{j}} v^{n}  = -\frac{1}{\rho}\frac{p^{n+1/2}_{i,j+1} - p^{n+1/2}_{i,j-1}}{2\Delta y} \\
+		\frac{Q^{n+1} - Q^{n}}{\Delta t} = c v^n_{i,j}\\
+		\frac{P^{n+1} - P^{n}}{\Delta t} = c u^n_{i,j}\\
+	    \dfrac{p^{n+3/2}_{i,j} - p^{n+1/2}_{i,j}}{\Delta t} + c \left(\sigma_{x_{i}} + \sigma_{y_{j}}\right)p^{n+1/2} =\\= -\rho c^2 \left(\frac{u^{n+1}_{i+1,j} - u^{n+1}_{i-1,j}}{2\Delta x} + \dfrac{v^{n+1}_{i,j+1} - v^{n+1t}_{i,j-1}}{2\Delta y} - \sigma_{x_i}\frac{Q^{n+1}_{i,j+1} - Q^{n+1}_{i,j}}{\Delta y} - \sigma_{y_j}\frac{P^{n+1}_{i+1,j} - P^{n+1}_{i,j}}{\Delta x} \right)
+	\end{dcases}\label{eq:diff_pml}
+\end{equation}
+    
+и для split-field PML \ref{eq:split_pml}
+\begin{equation}
+    \begin{dcases}
+        (p_1)_{i,j}^{n+1}
+        p_{i,j}^{n+1} = (p_1)_{i,j}^{n+1} + (p_2)_{i,j}^{n+1}
+    \end{dcases}
+    \label{eq:diff_split_pml}
+\end{equation}
+    
+\subsection{Решение PML-систем сеточно-характеристическим методом}
+    
+Cеточно-характеристический метод, рассмотренный в первой главе, является более эффективным по сравнению с простым конечно-разностным методом. Появляется естественный вопрос о применимости этого метода для решения систем уравнений Beringer PML \eqref{eq:pml} и split-field pml \eqref{eq:split_pml}. Покажем это.
+    
+\subsubsection{Beringer PML}
+    
+Рассмотрим систему уравнений, реализующую затухающее граничнее условие типа PML \eqref{eq:pml}, и произведём замену:
+\begin{equation}
+    \varphi = \begin{pmatrix}
+        u \\ v \\ p \\ Q \\ P
+    \end{pmatrix}
+\end{equation}
+    
+Тогда система принимает вид
+\begin{equation}
+    \varphi_t = \bm{A}\varphi_x + \bm{B}\varphi_y + \bm{S}\varphi
+\end{equation}
+
+Где матрицы $\bm{A}$, $\bm{B}$ и $\bm{S}$, имеют вид
+\begin{equation*}
+    \bm{A} = \begin{pmatrix}
+        0 & 0 & -\frac{1}{\rho} & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        -\rho c^2 & 0 & 0 & 0 & -\rho c^2 \sigma_y \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0
+    \end{pmatrix} \qquad
+	\bm{B} = \begin{pmatrix}
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & -\frac{1}{\rho} & 0 & 0 \\
+        0 & -\rho c^2  & 0 & -\rho c^2 \sigma_x & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0
+    \end{pmatrix}
+\end{equation*}
+    
+\begin{equation*}
+	\bm{S} = \begin{pmatrix}
+        -c \sigma_x & 0 & 0 & 0 & 0 \\
+        0 & -c \sigma_y & 0 & 0 & 0 \\
+        0 & 0 & -c (\sigma_x + \sigma_y) & 0 & 0 \\
+        0 & c & 0 & 0 & 0 \\
+        c & 0 & 0 & 0 & 0
+    \end{pmatrix}
+\end{equation*}
+
+Эти матрицы можно диагонализовать
+
+\begin{equation*}
+    \bm{A} = \bm{L_1} \bm{\Lambda_1} \bm{R_1}
+\end{equation*}
+\begin{equation*}
+    \bm{B} = \bm{L_2} \bm{\Lambda_2} \bm{R_2}
+\end{equation*}
+\begin{equation*}
+    \bm{S} =\bm{L_3} \bm{\Lambda_3} \bm{R_3}
+\end{equation*}
+
+
+\begin{equation*}
+    \bm{L_1} = \begin{pmatrix}
+        0 & 0 & 1 & 0 & 0 \\
+        0 & -\sigma_y & 0 & \frac{1}{c \rho} & -\frac{1}{c \rho} \\
+        0 & 0 & 0 & 1 & 1 \\
+        0 & 1 & 0 & 0 & 0 \\
+        1 & 0 & 0 & 0 & 0
+    \end{pmatrix} \qquad
+    \bm{R_1} = \begin{pmatrix}
+        0 & 0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & 1 & 0 \\
+        1 & 0 & 0 & 0 & 0 \\
+        0 & \frac{c \rho}{2} & \frac{1}{2} & \frac{c \rho \sigma_y}{2} & 0  \\
+        0 & -\frac{c \rho}{2}  & \frac{1}{2} & - \frac{c \rho \sigma_y}{2} & 0
+    \end{pmatrix}
+\end{equation*}
+    
+\begin{equation*}
+    \bm{L_2} = \begin{pmatrix}
+        -\sigma_x & 0 & 0 & \frac{1}{c \rho} & -\frac{1}{c \rho} \\
+        0 & 0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 1 & 1 \\
+        0 & 1 & 0 & 0 & 0 \\
+        1 & 0 & 0 & 0 & 0
+    \end{pmatrix} \qquad
+    \bm{R_2} = \begin{pmatrix}
+        0 & 0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & 1 & 0 \\
+        0 & 1 & 0 & 0 & 0 \\
+        \frac{c \rho}{2} & 0 & \frac{1}{2} & 0 & \frac{c \rho \sigma_x}{2}  \\
+        -\frac{c \rho}{2} & 0 & \frac{1}{2} & 0 & - \frac{c \rho \sigma_x}{2} 
+    \end{pmatrix}
+\end{equation*}
+
+\begin{equation*}
+    \bm{\Lambda_1} = \bm{\Lambda_2} = \begin{pmatrix}
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & -c & 0 \\
+        0 & 0 & 0 & 0 & c
+    \end{pmatrix} 
+\end{equation*}
+    
+
+\begin{equation*}
+    \bm{L_3} = \begin{pmatrix}
+        0 & 0 & -\sigma_x & 0 & 0 \\
+        0 & 0 & 0 & -\sigma_y & 0 \\
+        0 & 0 & 0 & 0 & 1 \\
+        0 & 1 & 0 & 1 & 0 \\
+        1 & 0 & 1 & 0 & 0
+    \end{pmatrix} \qquad
+    \bm{R_3} = \begin{pmatrix}
+        \sigma_x^{-1} & 0 & 0 & 0 & 1 \\
+        0 & \sigma_y^{-1} & 0 & 1 & 0 \\
+        -\sigma_x^{-1} & 0 & 0 & 0 & 0 \\
+        0 & -\sigma_y^{-1} & 0 & 0 & 0 \\
+        0 & 0 & 1 & 0 & 0
+    \end{pmatrix}
+\end{equation*}
+
+\begin{equation*}
+    \bm{\Lambda_3} = \begin{pmatrix}
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & -c \sigma_x & 0 & 0 \\
+        0 & 0 & 0 & -c \sigma_y & 0 \\
+        0 & 0 & 0 & 0 & -c (\sigma_x + \sigma_y)
+    \end{pmatrix}
+\end{equation*}
+
+Полученное векторное уравнение в частных производных можно расщепить по физическим процессам для каждой компоненты аналогично уравнению переноса-диффузии с $\mu = 0$ \cite{marchuk_rasshep}.
+
+Будем решать систему, делая шаг по $x$ на первой трети шага по времени, делая шаг по $y$ на второй, и решая неоднородное уравнение на третей части шага по времени:
+\begin{gather*} 
+	\label{eq:pml_eq_split_1} \varphi_t = \bm{A} \varphi_x \\
+	\label{eq:pml_eq_split_2} \varphi_t = \bm{B} \varphi_y \\
+	\label{eq:pml_eq_split_3} \varphi_t = \bm{S} \varphi
+\end{gather*}
+
+Домножая $i$-ое уравнение слева на $\bm{R_i}$
+\begin{gather*} 
+    \bm{R_1} \varphi_t = \bm{R_1}\left(\bm{L_1 \Lambda_1 R_1}\right) \varphi_x \\
+	\bm{R_2} \varphi_t = \bm{R_2}\left(\bm{L_2 \Lambda_2 R_2}\right) \varphi_y \\
+	\bm{R_3} \varphi_t = \bm{R_3}\left(\bm{L_3 \Lambda_3 R_3}\right) \varphi
+\end{gather*}
+\begin{gather*} 
+    \bm{R_1} \varphi_t = \bm{\Lambda_1 R_1} \varphi_x \\
+	\bm{R_2} \varphi_t = \bm{\Lambda_2 R_2} \varphi_y \\
+	\bm{R_3} \varphi_t = \bm{\Lambda_3 R_3} \varphi
+\end{gather*}
+    
+Делая замену $\omega^i = \bm{R_i}\varphi $, $i\in\{1,2,3\}$, и учитывая, что матрицы $\Lambda_i$ диагональные, приходим к трём системам из трёх скалярных независимых уравнений:
+\begin{equation}
+\begin{dcases}
+    \omega^1_t = \bm{\Lambda_1} \omega^1_x \\
+	\omega^2_t = \bm{\Lambda_2} \omega^2_y \\
+	\omega^3_t = \bm{\Lambda_3} \omega^3
+\end{dcases}
+\label{eq:pml_grid_char_sys}
+\end{equation}
+
+Первые две системы представляют собой независимые скалярные уравнения переноса. Для их численного решения мы  воспользуемся TVD-схемой второго порядка с ограничителем superbee.
+    
+Третья система представляет собой 5 независимых скалярных уравнений с разделяемыми переменными, которые очевидно решаются аналитически. Обозначая номер уравнения нижним индексом $l$, получаем
+
+\begin{equation*}
+\begin{dcases}
+    \left(\omega^3_l\right)_t = 0 & l=1,2\\
+    \left(\omega^3_l\right)_t = \left[\Lambda_3\right]_{ll} \omega^3_l & l=3,4,5
+\end{dcases}
+\end{equation*}
+
+\begin{equation*}
+\begin{dcases}
+    \omega^3_l(t) = \omega^3_l(t=0) & l=1,2 \\
+    \omega^3_l(t) = \omega^3_l(t=0) \cdot \exp\left(\left[\Lambda_3\right]_{ll} t\right) & l = 3,4,5
+\end{dcases}
+\end{equation*}
+
+Таким образом построен сеточно-характеристический метод решения уравнения \eqref{eq:pml}.
+
+\subsubsection{Splid-Field PML}
+
+Теперь построим сеточно-характеристический метод решения системы уравнений split-field PML \eqref{eq:split_pml}
+
+На этот раз произведём замену
+\begin{equation}
+	\varphi = \begin{pmatrix} u \\ v \\ p_1 \\ p_2 \end{pmatrix}
+\end{equation}
+
+Тогда система принимает вид
+\begin{equation}
+	\varphi_t = \bm{A} \varphi_x +  \bm{B} \varphi_y - \bm{C} \varphi
+\end{equation}
+где 
+\begin{equation}
+	\bm{A} = 
+	\begin{pmatrix}
+    	0 & 0 & \frac{1}{\rho} & \frac{1}{\rho} \\
+    	0 & 0 & 0 & 0 \\
+        \kappa & 0 & 0 & 0 \\
+    	0 & 0 & 0 & 0
+	\end{pmatrix} \qquad
+	\bm{B} = 
+	\begin{pmatrix}
+    	0 & 0 & 0 & 0 \\
+        0 & 0 & \frac{1}{\rho} & \frac{1}{\rho} \\
+    	0 & 0 & 0 & 0 \\
+        0 & \kappa  & 0 & 0
+	\end{pmatrix} \qquad
+	\bm{C} = 
+	\begin{pmatrix}
+    	\sigma_x & 0 & 0 & 0 \\
+    	0 & \sigma_y & 0 & 0 \\
+        0 & 0 & \sigma_x & 0 \\
+    	0 & 0 & 0 & \sigma_y
+	\end{pmatrix}
+\end{equation}
+
+Опять замечаем, что матрицы можно диагонализовать
+\begin{gather*}
+	\bm{A} = \bm{L_1} \bm{\Lambda_1} \bm{R_1} = 
+	\begin{pmatrix}
+    	0 & 0 & -\frac{1}{\sqrt{\kappa\rho}} & \frac{1}{\sqrt{\kappa\rho}} \\
+    	0 & 1 & 0 & 0 \\
+        -1 & 0 & 1 & 1 \\
+    	1 & 0 & 0 & 0
+	\end{pmatrix} 
+	\begin{pmatrix}
+    	0 & 0 & 0 & 0 \\
+    	0 & 0 & 0 & 0 \\
+        0 & 0 & -\sqrt{\frac{\kappa}{\rho}} & 0 \\
+    	0 & 0 & 0 & \sqrt{\frac{\kappa}{\rho}}
+	\end{pmatrix} 
+	\begin{pmatrix}
+    	0 & 0 & 0 & 1 \\
+    	0 & 1 & 0 & 0 \\
+        -\frac{\sqrt{\kappa\rho}}{2} & 0 & \frac{1}{2} & \frac{1}{2} \\
+        \frac{\sqrt{\kappa\rho}}{2} & 0 & \frac{1}{2} & \frac{1}{2}
+	\end{pmatrix} \\
+	\bm{B} = \bm{L_2} \bm{\Lambda_2} \bm{R_2} = 
+	\begin{pmatrix}
+    	0 & 1 & 0 & 0 \\
+    	0 & 0 & -\frac{1}{\sqrt{\kappa\rho}} & \frac{1}{\sqrt{\kappa\rho}} \\
+    	-1 & 0 & 0 & 0 \\
+        1 & 0 & 1 & 1 
+	\end{pmatrix} 
+	\begin{pmatrix}
+    	0 & 0 & 0 & 0 \\
+    	0 & 0 & 0 & 0 \\
+        0 & 0 & -\sqrt{\frac{\kappa}{\rho}} & 0 \\
+    	0 & 0 & 0 & \sqrt{\frac{\kappa}{\rho}}
+	\end{pmatrix} 
+	\begin{pmatrix}
+    	0 & 0 & -1 & 0 \\
+    	1 & 0 & 0 & 0 \\
+        0 & -\frac{\sqrt{\kappa\rho}}{2} & \frac{1}{2} & \frac{1}{2} \\
+        0 & \frac{\sqrt{\kappa\rho}}{2}  & \frac{1}{2} & \frac{1}{2}
+	\end{pmatrix} 
+\end{gather*}
+
+Опять воспользуемся расщеплением по физическим процессам для каждой компоненты полученного векторного уравнение в частных \cite{marchuk_rasshep}. Тогда, расщепляя систему и домножая на $\bm{L_i}^{-1}=\bm{R_i}$ слева, получим
+\begin{equation}
+    \begin{dcases}
+        \bm{R_1}\varphi_t = \bm{\Lambda_1}\bm{R_1} \varphi_x\\
+        \bm{R_2}\varphi_t = \bm{\Lambda_2}\bm{R_2} \varphi_y\\
+        \varphi_t = - \bm{C} \varphi  
+    \end{dcases}
+\end{equation}
+
+Производя замену переменныx $\omega_i = \bm{R_i} \varphi$:
+\begin{equation}
+    \begin{dcases}
+        \omega_t^1 = \bm{\Lambda_1}\omega_x^1 \\
+        \omega_t^2 = \bm{\Lambda_2}\omega_y^2 \\
+        \varphi_t = - \bm{C} \varphi  
+    \end{dcases}
+\end{equation}
+
+Решение этой системы аналогично уже разобранному решению системы \eqref{eq:pml_grid_char_sys}. Таким образом система уравнений split-field PML \eqref{eq:split_pml} также решается сеточно-характеристичнским методом.
+
+\subsection{Методы оценки результатов}
+
+Для оценки эффективности PML и сравнения PML для конечно-разностных и сеточно-характеристических методов предлагается строить график зависимости нормализованного давления от времени, как это делается в \cite{pml-acoustic}. Там же приводится способ получения аналитического решения посредством обратного преобразования Фурье.
+
+Другой метод оценки идеального затухания состоит в моделировании на в несколько раз большей сетке, и использовании только его центральной части. Таким образом, при выборе достаточно большой сетки и достаточно малого временного промежутка, начальная волна пройдёт полностью через мнимые границы без отражения, а реальная отражённая волна не успеет вернуться, и в итоговом восприятии мы получим идеальное поглощение.
