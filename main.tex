@@ -28,6 +28,7 @@
 \usepackage{pgfplots}
 \usepackage{float}
 \usepackage{commath}
+\usepackage{xfrac}
 
 \usepackage[compact]{titlesec}
 \titleformat{\section}
@@ -50,123 +51,16 @@
 
 \input{2_island}
 
-\section{что-то}
-
-\subsection{Конечно-разностный метод}
-
-Простейшим численным методом решения системы уравнений в частных производных \eqref{eq:acoustic} является метод конечных разностей. Применим явную двухточечную схему для дискретизации производных по времени и центральную двухточечную схему для дискретизации производных по пространственным переменным.
-\begin{gather*}
-    \dfrac{\partial f}{\partial t} = \dfrac{f^{n+1}_{i,j} - f^{n}_{i,j}}{\tau} \\
-    \dfrac{\partial f}{\partial x} = \dfrac{f^{n}_{i+1,j} - f^{n}_{i-1,j}}{2 h_x} \\
-    \dfrac{\partial f}{\partial y} = \dfrac{f^{n}_{i,j+1} - f^{n}_{i,j-1}}{2 h_y}
-\end{gather*}
-
-Таким образом разностная схема (leapfrog scheme):
-\begin{equation}
-	\begin{dcases}
-		\frac{u^{n+1}_{i,j} - u^{n}_{i,j}}{\tau} = -\frac{1}{\rho}\frac{p^{n+1/2}_{i+1,j} - p^{n+1/2}_{i-1,j}}{2 h_x} \\
-		\frac{v^{n+1}_{i,j} - v^{n}_{i,j}}{\tau} = -\frac{1}{\rho}\frac{p^{n+1/2}_{i,j+1} - p^{n+1/2}_{i,j-1}}{2 h_y} \\
-	    \dfrac{p^{n+3/2}_{i,j} - p^{n+1/2}_{i,j}}{\tau}= -\rho c^2 \left(\frac{u^{n+1}_{i+1,j} - u^{n+1}_{i-1,j}}{2 h_x} + \dfrac{v^{n+1}_{i,j+1} - v^{n+1t}_{i,j-1}}{2 h_y}\right) \\
-	\end{dcases}\label{eq:diff}
-\end{equation}
-
-\subsection{Сеточно-характеристический метод}
-
-Более эффективным методом решения гиперболических систем является сеточно-характеристический метод.
-
-Перепишем исходную систему \eqref{eq:acoustic} в матричном виде, используя раннее введённую переменную $\varphi$ \eqref{eq:phi} 
-\begin{equation}
-	\varphi_t = \bm{A} \varphi_x +  \bm{B} \varphi_y
-\end{equation}
-
-\begin{equation}
-	\bm{A} = \begin{pmatrix}
-				0 & 0 & -\frac{1}{\rho} \\
-				0 & 0 & 0 \\
-				-\rho c^2 & 0 & 0			
-		 	 \end{pmatrix} \qquad
-	\bm{B} = \begin{pmatrix}
-				0 & 0 & 0 \\
-				0 & 0 & -\frac{1}{\rho} \\
-				0 & -\rho c^2 & 0			
-		 	 \end{pmatrix}
-\end{equation}
-
-Для решения полученной системы воспользуемся методом расщепления: будем решать систему, делая шаг по $x$ на первом полушаге по времени, и делая шаг по $y$ на втором полушаге по времени:
-
-\begin{gather} 
-	\label{eq:eq_split_1} \varphi_t = \bm{A} \varphi_x \\
-	\label{eq:eq_split_2} \varphi_t = \bm{A} \varphi_x
-\end{gather}
-
-Таким образом пересчёт на новой временной слой будет иметь вид
-\begin{gather}
-		\varphi^{t+\Delta t / 2} = S_x(\Delta t / 2, \varphi^t)\\
-		\varphi^{t+\Delta t}     = S_y(\Delta t / 2, \varphi^{t+\Delta t/2})
-\end{gather}
-
-где $\Delta t$ --- величина шага по времени, $S_x$ --- шаг по $x$, $S_y$ --- шаг по $y$.
-
-Заметим, что матрицы $\bm{A}$ и $\bm{B}$ раскладываются как произведения
-
-\begin{gather}
-		\bm{A} = \bm{L_1} \bm{\Lambda_1} \bm{R_1}\\
-		\bm{B} = \bm{L_2} \bm{\Lambda_2} \bm{R_2}
-\end{gather}
-
-где $\bm{L_i} = \bm{R_i}^{-1}$ ($i\in\{1,2\}$), а $\bm{\Lambda_i}$ --- диагональные матрицы, составленные из собственных чисел матриц $\bm{A}$ и $\bm{B}$, т.~е.
-\begin{equation}
-	\bm{L_1} = \begin{pmatrix}
-				0 & \frac{1}{\rho c} & -\frac{1}{\rho c} \\
-				1 & 0 & 0 \\
-				0 & 1 & 1			
-		 	 \end{pmatrix} \qquad
-	\bm{R_1} = \begin{pmatrix}
-				0 & 1 & 0 \\
-				\frac{\rho c}{2} & 0 & \frac{1}{2} \\
-				-\frac{\rho c}{2} & 0 & \frac{1}{2}		
-		 	 \end{pmatrix}
-\end{equation}
-
-\begin{equation}
-	\bm{L_2} = \begin{pmatrix}
-				1 & 0 & 0 \\
-				0 & \frac{1}{\rho c} & -\frac{1}{\rho c} \\
-				0 & 1 & 1			
-		 	 \end{pmatrix} \qquad
-	\bm{R_2} = \begin{pmatrix}
-				1 & 0 & 0 \\
-				0 & \frac{\rho c}{2} & \frac{1}{2} \\
-				0 & -\frac{\rho c}{2} & \frac{1}{2}		
-		 	 \end{pmatrix}
-\end{equation}
-
-\begin{equation}
-	\bm{\Lambda_1} = \bm{\Lambda_2} = \begin{pmatrix}
-								0 & 0 & 0 \\
-								0 & -c & 0 \\
-								0 & 0 & c				
-							\end{pmatrix}
-\end{equation}
-
-Так как, как было показано выше, матрицы $\bm{A}$ и $\bm{B}$ приводятся к диагональному виду, то поставленная задача является гиперболической.
-
-Домножим слева уравнения \eqref{eq:eq_split_1} и \eqref{eq:eq_split_2} на $R_1$ и $R_2$ соответственно:
-\begin{gather} 
-	\bm{R_1}\varphi_t = \bm{R_1}\bm{A} \varphi_x = \left(\bm{R_1 L_1}\right)\bm{\Lambda_1 R_1} \varphi_x = \bm{\Lambda_1} \left(\bm{R_1} \varphi_x\right)\\
-	\bm{R_2}\varphi_t = \bm{R_2}\bm{A} \varphi_x = \left(\bm{R_2  L_2}\right)\bm{\Lambda_2 R_2} \varphi_y = \bm{\Lambda_2} \left(\bm{R_2} \varphi_y\right)
-\end{gather}
-
-Делая замену $\omega^i =  \bm{R_i} \varphi$, $i\in\{1,2\}$, и учитывая, что матрицы $\Lambda_i$ диагональные, приходим к двум системам из трёх скалярных независимых уравнений переноса:
-\begin{gather}
-	\omega^1_t = \bm{\Lambda_1} \omega^1_x\\
-	\omega^2_t = \bm{\Lambda_2} \omega^2_y
-\end{gather}
-
-Для решения этих скалярных уравнений будем использовать схему TVD второго порядка с ограничителем superbee.
-
 \input{4_abscorbing}
 
-\input{9_biblio}
+\cite{cir_scheme}
+\cite{petrov_lobanov_book}
+
+\cite{pml_from_maxwell}
+\cite{rashep_marchuk}
+\cite{arch_comp_sim}
+
+\bibliographystyle{unsrt}
+\bibliography{bibliography}
 
 \end{document}

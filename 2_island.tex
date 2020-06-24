@@ -165,6 +165,7 @@
 \subsection{Численный метод}
 
 \subsubsection{Сеточно-характеристический метод}
+\label{sec:elastic_gcm}
 
 Для решения систем уравнений в частных производных \eqref{eq:elastic_wave_eq} и \eqref{eq:acoustic_wave_eq} воспользуемся сеточно-характеристическим методом на регулярных прямоугольных сетках. Получим его для системы \eqref{eq:acoustic_wave_eq}, описывающей упругие среды. Для системы \eqref{eq:acoustic_wave_eq} он получается абсолютно аналогично если учесть, что для акустических сред $\sigma_{xx} = \sigma_{yy} = p$ и $\sigma_{xy}=0$.
 
@@ -173,7 +174,7 @@
     \varphi = \begin{pmatrix} v_x \\ v_y \\ \sigma_{xx} \\ \sigma_{xy} \\ \sigma_{yy} \end{pmatrix}
 \end{equation}
 
-Нижние индексы здесь обозначают соответствующие компоненты ветора скорости $v$ и тензора напряжений $\pmb{\sigma}$.
+Нижние индексы здесь обозначают соответствующие компоненты вектора скорости $v$ и тензора напряжений $\pmb{\sigma}$.
 
 Запишем гиперболическую полную систему линейный дифференциальных уравнений в частных производных \eqref{eq:elastic_wave_eq} в канонической матричной форме
 
@@ -313,19 +314,19 @@
 \end{dcases}
 \end{equation*}
 
-Производя замену
+Производя замену (переход к инвариантам Римана)
 
 \begin{equation}
 \begin{matrix}
     \omega_1 = \pmb{S}_1 \varphi_x \\
-    \omega_2 = \pmb{S}_2 \varphi_y \\
+    \omega_2 = \pmb{S}_2 \varphi_y
 \end{matrix}
 \label{eq:riman_variable}
 \end{equation}
 
 получаем систему
 
-\begin{equation*}
+\begin{equation}
 \begin{dcases}
     \dfrac{\partial \omega_1}{\partial t}  +
     \pmb{\Lambda}_1 \dfrac{\partial \omega_1}{\partial x} = 0 \\
@@ -333,13 +334,100 @@
     \pmb{\Lambda}_2 \dfrac{\partial \omega_2}{\partial y} = 0
 \end{dcases}
 \label{eq:grid_char_res}
+\end{equation}
+
+Произведённая замена \eqref{eq:riman_variable} очевидно обратимая, так как матрицы $\pmb{S}_i$, $i=1,2$ обратимы
+
+\begin{equation}
+\begin{matrix}
+    \varphi_x  = \pmb{S}_1^{-1} \omega_1  \\
+    \varphi_y  = \pmb{S}_2^{-1} \omega_2
+\end{matrix}
+\label{eq:riman_variable_inverse}
+\end{equation}
+
+Так как матрицы $\pmb{\Lambda}_i$ $i=1,2$ диагональные, то система \eqref{eq:grid_char_res} представляет собой 10 независимых скалярных уравнений переноса.
+
+Таким образом общая схема решения систем \eqref{eq:elastic_wave_eq} и \eqref{eq:acoustic_wave_eq} следующая
+
+\begin{enumerate}
+    \item Произвести переход к инвариантам Римана \eqref{eq:riman_variable}.
+    \item Решить систему независимых одномерных линейных уравнений переноса \eqref{eq:grid_char_res}.
+    \item Осуществить обратный переход к физическим переменным \eqref{eq:riman_variable_inverse}.
+\end{enumerate}
+
+Заметим, что выбор метода решения одномерного уравнения переноса является открытым. При этом именно он определяет порядок аппроксимации всего сеточно-характеристического численного метода. Приведём несколько наиболее часто используемых схем для решения одномерного линейное уравнение переноса на скалярную величину $q$
+
+\begin{equation*}
+    \dfrac{\partial q}{\partial t} + \lambda \dfrac{\partial q}{\partial x} = 0
+    \label{eq:lin_advection}
+\end{equation*}
+    
+\subsubsection{Схема Куранта-Изаксона-Риса}
+%Courant, Richard; Isaacson, E; Rees, M. (1952). "On the Solution of Nonlinear Hyperbolic Differential Equations by Finite Differences". Comm. Pure Appl. Math. 5 (3): 243..255. doi:10.1002/cpa.3160050303.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[trim={55pt 100pt 530pt 100pt},clip,height=4cm]{images/theory/scheme_cir.png}
+    \caption{Шаблон схемы Куранта-Изаксона-Риса.}
+    \label{fig:scheme_cir}
+\end{figure}
+
+Схема Куранта-Изаксона-Риса для решения уравнения \eqref{eq:lin_advection} определяется как
+
+\begin{equation*}
+\begin{dcases}
+    \dfrac{q_i^{n+1} - q_i^n}{\tau} + \lambda\dfrac{q_i^n - q_{i-1}^n}{h} = 0 & , \lambda > 0\\
+    \dfrac{q_i^{n+1} - q_i^n}{\tau} + \lambda\dfrac{q_{i+1}^n - q_i^n}{h} = 0  & , \lambda < 0
+\end{dcases}
 \end{equation*}
 
-Так как матрицы $\pmb{\Lambda}_i$ $i=1,2$ диагональные, то система \eqref{eq:grid_char_res} представляет собой.
+Данная схема имеет первый порядок аппроксимации и является устойчивой при выполнении условия Куранта-Фридрихса-Леви
 
-\subsubsection{Схема Куранта-Изаксона-Риса}
+\begin{equation}
+    \abs{\dfrac{\lambda \tau}{h}} \leq 1
+    \label{eq:cfl_condition}
+\end{equation}
 
 \subsubsection{Схема Русанова}
+%К. М. Магомедов, А. С. Холодов, О построении разностных схем для уравнений гиперболического типа на основе характеристических соотношений, Ж. вычисл. матем. и матем. физ., 1969, том 9, номер 2, 373–386
+%http://www.mathnet.ru/links/2f4d9e5725a56dabadced5481c2ca461/zvmmf7067.pdf
+%https://www.intuit.ru/studies/courses/1170/213/lecture/5493?page=4
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[trim={55pt 100pt 35pt 100pt},clip,height=4cm]{images/theory/scheme_rusanov.png}
+    \caption{Шаблон схемы Русанова третьего порядка аппроксимации.}
+    \label{fig:scheme_rusanov}
+\end{figure}
+
+Схема Русанова использует промежуточные индексы и состоит из трёх этапов
+
+\begin{enumerate}
+    \item Переход $t_n \rightarrow t_{n+\sfrac{1}{3}}$ производится по схеме Лакса
+    \begin{equation}
+    \begin{gathered}
+        \dfrac{q^{n+\sfrac{1}{3}}_{i+\sfrac{1}{2}} - \frac{1}{2}\left(q^n_i + q^n_{i+1}\right)}{\sfrac{\tau}{3}} + \dfrac{f^n_{i+1} - f^n_{i}}{h} = 0 \\
+        \dfrac{q^{n+\sfrac{1}{3}}_{i-\sfrac{1}{2}} - \frac{1}{2}\left(q^n_i + q^n_{i-1}\right)}{\sfrac{\tau}{3}} + \dfrac{f^n_{i+1} - f^n_{i}}{h} = 0
+    \end{gathered}
+   \end{equation}
+ 
+    \item Для шага $t_{n+\sfrac{1}{3}} \rightarrow t_{n+\sfrac{2}{3}}$ используется схема <<чехарда>>
+    \begin{equation}
+        \dfrac{q^{n+\sfrac{2}{3}}_{i} - q^n_i}{\sfrac{2\tau}{3}} + \dfrac{f^{n+\sfrac{1}{3}}_{i+\sfrac{1}{2}} - f^{n+\sfrac{1}{3}}_{i-\sfrac{1}{2}}}{h} = 0
+    \end{equation}
+
+    \item Последний шаг $t_{n+\sfrac{2}{3}} \rightarrow t_{n+1}$ следующий
+    \begin{equation}
+    \begin{gathered}
+        \dfrac{q^{n+1}_i - q^n_i}{\tau} + \dfrac{3}{8}\dfrac{f^{n+\sfrac{2}{3}}_{i+1} - f^{n+\sfrac{2}{3}}_{i-1}}{h} + \dfrac{-2f^n_{i+2} + 7f^n_{i+1} -  7f^n_{i-1} +22f^n_{i-2}}{24h} +\\+ \dfrac{\omega}{24}\left(q^n_{i+2}-  4q^n_{i+1} + 6q^n_{i} - 4 q^n_{i-1} + q^n_{i-2}\right) = 0
+    \end{gathered}
+    \end{equation}
+    
+    Последнее слагаемое необходимо для обеспечения устойчивости данной схемы.
+\end{enumerate}
+
+Схема Русанова имеет третий порядок аппроксимации и является условно устойчивой при выполнении, в дополнении к условию Куранта-Фридрихса-Леви \eqref{eq:cfl_condition}, неравенства $4s^2 - s^4 \leq \omega \leq 3$, где $s = \frac{\tau}{h}$.
 
 \subsubsection{Контактные и граничные условия}
 
@@ -348,24 +436,32 @@
 Современные буры имеют довольно сложное устройство, зачастую  сочетая в себе ударные и вращательные механизмы. В данной работе нас в первую очередь интересует волновая картина, возникающая при бурении в конкретной геологической модели (см. рис. \autoref{fig:island}). Поэтому, для простоты, воздействие бура мы будет представлять в качестве точечного источника давления в виде импульса Рикера частотой 30 Гц.
 \begin{equation}
     p(x,y) = \dfrac{1}{\pi \sigma^4} \left(1-\dfrac{1}{2}\left(\dfrac{x^2+y^2}{\sigma^2}\right)\right) \exp\left({-\frac{x^2+y^2}{2\sigma^2}}\right)
+    \label{eq:ricker}
 \end{equation}
 
-\begin{center}
-    \begin{tikzpicture}
-    \begin{axis}[
-        title={$p(x,y)|_{\sigma=1}$}, 
-        xlabel=$x$, ylabel=$y$,
-    	small,
-    ]
-    \addplot3[
-    	surf,
-    	domain=-4:4,
-    	domain y=-4:4,
-    ] 
-    	{1/(3.14)*(1-((x^2+y^2)/1)/2)*exp(-(x^2+y^2)/2)};
-    \end{axis}
-    \end{tikzpicture}
-\end{center}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[trim={0pt 45pt 0pt 80pt},clip,width=0.7\textwidth]{images/gas_field/ricker_wavelet.png}
+    \caption{График импульса Рикера \eqref{eq:ricker} при $\sigma=1$.}
+    \label{fig:ricker_plot}
+\end{figure}
+
+%\begin{center}
+%   \begin{tikzpicture}
+%   \begin{axis}[
+%    title={$p(x,y)|_{\sigma=1}$}, 
+ %       xlabel=$x$, ylabel=$y$,
+  %  	small,
+   % ]
+    %\addplot3[
+    %	surf,
+    %	domain=-4:4,
+    %	domain y=-4:4,
+    %] 
+    %	{1/(3.14)*(1-((x^2+y^2)/1)/2)*exp(-(x^2+y^2)/2)};
+  %  \end{axis}
+ %   \end{tikzpicture}
+%\end{center}
 
 \begin{figure}[H]
     \centering

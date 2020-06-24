@@ -1,0 +1,112 @@
+%=================================================
+%                   Остров
+%=================================================
+
+% Схема КИР
+@article
+{
+    cir_scheme,
+    author = {Courant, Richard; Isaacson, E; Rees, M.},
+    year = {1952},
+    month = {08},
+    pages = {243-255},
+    title = {On the Solution of Nonlinear Hyperbolic Differential Equations by Finite Differences},
+    volume = {5},
+    number = {3},
+    journal = {Comm. Pure Appl. Math.},
+    doi = {10.1002/cpa.3160050303}
+}
+
+
+%К. М. Магомедов, А. С. Холодов, О построении разностных схем для уравнений гиперболического типа на основе характеристических соотношений, Ж. вычисл. матем. и матем. физ., 1969, том 9, номер 2, 373–386
+%http://www.mathnet.ru/links/2f4d9e5725a56dabadced5481c2ca461/zvmmf7067.pdf
+
+% Схема Русанова + КИР
+%https://www.intuit.ru/studies/courses/1170/213/lecture/5493?page=4
+@book
+{
+    petrov_lobanov_book,
+    author    = {И.Б. Петров, А.И. Лобанов}, 
+    title     = {Лекции по вычислительной математике: Учебное пособие},
+    publisher = {М.: Интернет-Университет Информационных Технологий; БИНОМ. Лаборатория знаний},
+    year      = 2006,
+    pages     = {345},
+    isbn      = {978-5-9556-0065-9}
+}
+
+%=================================================
+%                   P M L
+%=================================================
+
+% Оригинальная статья
+@article
+{
+    berenger,
+    author = {J.P.Berenger},
+    year = {1994},
+    month = {10},
+    pages = {185–200},
+    title = {A Perfectly Matched Layer for the absorption of electromagnetic waves},
+    volume = {114},
+    number = {2},
+    journal = {J. of Comp.Phys},
+    doi = {10.1016/S0168-9274(98)00026-9},
+    issn = {0021-9991}
+}
+
+% Вывод Beringer PML (акустика из уравнений Максвелла)
+% https://www.researchgate.net/publication/222488665_Absorbing_PML_boundary_layers_for_wave-like_equations
+@article
+{
+    pml_from_maxwell,
+    author = {Turkel, Eli and Yefet, A.},
+    year = {1998},
+    month = {08},
+    pages = {533-557},
+    title = {Absorbing PML boundary layers for wave-like equations},
+    volume = {27},
+    journal = {Applied Numerical Mathematics},
+    doi = {10.1016/S0168-9274(98)00026-9}
+}
+
+% Расщепление систем при выводе PML с СХМ (статья Марчука)
+% http://www.mathnet.ru/links/804fe31f9ef894bfe997bbca572c38e7/zvmmf2383.pdf
+@article
+{
+    rashep_marchuk,
+    author = {Г. И. Марчук},
+    year = {1995},
+    month = {08},
+    pages = {667-671},
+    title = {Методы расщепления для решения нестационарных задач},
+    volume = {35},
+    number = {6},
+    journal = {Ж. вычисл. матем. и матем. физ.},
+    url = {http://www.mathnet.ru/links/804fe31f9ef894bfe997bbca572c38e7/zvmmf2383.pdf}
+}
+
+% Про виды PML
+% http://129.67.184.129/trefethen/6all.pdf
+@inproceedings
+{
+    Trefethen1996FiniteDA,
+    booktitle = {Finite Difference and Spectral Methods for Ordinary and Partial Differential Equations},
+    pages  = {225-226},
+    author = {Lloyd N. Trefethen},
+    year   = {1994}
+}
+% Японская книжка, немного про pml
+@book
+{
+    arch_comp_sim,
+    author    = {Sakamoto, Shinichi and Tsuru, Hideo and Toyoda, Masahiro and Asakura, Takumi}, 
+    editor    = {Sakuma, Tetsuya and Sakamoto, Shinichi and Otsuru, Toru},
+    title     = {Computational Simulation in Architectural and Environmental Acoustics},
+    publisher = {Springer Japan},
+    year      = 2014,
+    pages     = {20-25},
+    isbn      = {978-4-431-54454-8},
+    doi       = {10.1007/978-4-431-54454-8},
+    url="https://doi.org/10.1007/978-4-431-54454-8_"
+}
+
