@@ -1,19 +1,32 @@
 \section{Моделирование динамических процессов в ледовом острове}
 
-\subsection{Геологическая модель}
+\subsection{Постановка задачи}
 
 Рассмотрим в двумерном случае ледовый остров шириной 300 м. и высотой 10 м., покоящийся на дне моря глубиной 8 м.
 
-\begin{figure}[htb]
-    \centering
-    \includegraphics[trim={0.5cm 3.5cm 0.5cm 2.0cm},clip,width=0.75\textwidth]{images/gas_field/gas_field_scheme.png}
-    \caption{Схема геологической модели.}
-    \label{fig:island}
-\end{figure}
+Грунт под островом будем считать состоящим из придонного слоя глубиной 10 м. и слоя осадочных пород глубиной 600 м. В некоторых случаях мы будем также рассматривать  газоносный слой, находящийся под слоем осадочных пород. Параметры рассматриваемых сред приведены в \autoref{tab:geo}.
 
-Грунт под островом будем считать состоящим из придонного слоя глубиной 10 м. и слоя осадочных пород глубиной 600 м. В некоторых случаях мы будем также рассматривать  газоносный слой. Бур будем считать расположенным посередине длины острова на глубине 20 м.
+Ставятся следующие задачи
 
-Параметры рассматриваемых сред приведены в таблице \autoref{tab:geo}.
+\begin{enumerate}
+    \item Исследовать распространение акустических и упругих волн от бура, расположенного посередине длины острова на глубине 20 м., с учётом наличия газоносного слоя (см. \autoref{fig:island}).
+    
+    \begin{figure}[htb]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/gas_field/gas_field_scheme.png}
+        \caption{Постановка задачи о бурении.}
+        \label{fig:island}
+    \end{figure}
+
+    \item Найти распределение напряжений в ледовом острове при наличии здания на поверхности острова (см. \autoref{fig:stamp_scheme})\footnote{Здесь линейные размеры совпадают с задачей о бурении, если не указано обратное.}. Оценить максимальную величину статической нагрузки, которая не приводит к разрушению льда. Найти области острова, наиболее подверженные разрушению.
+    
+    \begin{figure}[htb]
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/stamp/stamp_scheme.png}
+        \caption{Постановка задачи о статической нагрузке.}
+        \label{fig:stamp_scheme}
+    \end{figure}
+\end{enumerate}
 
 \renewcommand{\arraystretch}{1.2}
 \begin{table}[htb]
@@ -64,13 +77,13 @@
 
 \subsubsection{Контактные условия}
 
-Между средами необходимо поставить контактные условия, которые изображены на \autoref{fig:contacts}.
+Между средами необходимо поставить контактные условия, которые изображены на \autoref{fig:contacts} (они одинаковы для задачи о буре и задачи о статической нагрузке).
 
-\begin{figure}[H]
+\begin{figure}[htb]
     \centering
-    \includegraphics[trim={90pt 35pt 90pt 60pt},clip,width=0.75\textwidth]
+    \includegraphics[width=0.8\textwidth]
     {images/gas_field/contacts.png}
-    \caption{Схема контактных условия: 1 --- контактное условие полного слипания, 2 --- контактное условие между упругой и акустической средами, 3 --- контактное условие скольжения, 4 --- контактное условие отражения.}
+    \caption{Схема контактных условий: 1 --- контактное условие полного слипания, 2 --- контактное условие между упругой и акустической средами, 3 --- контактное условие скольжения, 4 --- контактное условие отражения.}
     \label{fig:contacts}
 \end{figure}
 
@@ -113,22 +126,29 @@
     \begin{equation}
         \pmb{\sigma} \cdot n = 0
     \end{equation}
-
 \end{enumerate}
 
 \subsubsection{Граничные условия}
 
-Граничные условия расчётной области изображены на \autoref{fig:borders}.
+Граничные условия области изображены на \autoref{fig:borders} для задачи о бурении и на \autoref{fig:stamp_scheme} для задачи о статической нагрузке.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[trim={90pt 35pt 90pt 60pt},clip,width=0.75\textwidth]
+    \includegraphics[width=0.8\textwidth]
     {images/gas_field/border_conds.png}
-    \caption{Схема граничных условий: a --- граничное условие поглощения, b --- граничное условие нулевого давления.}
+    \caption{Схема граничных условий для задачи о бурении: a --- граничное условие поглощения, b --- граничное условие нулевого давления.}
     \label{fig:borders}
 \end{figure}
 
-\begin{enumerate}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]
+    {images/stamp/stamp_border.png}
+    \caption{Схема граничных условий для задаче о статической нагрузке: a --- граничное условие поглощения, b --- граничное условие нулевого давления, с --- граничное условие постоянного  давления.}
+    \label{fig:stamp_borders}
+\end{figure}
+
+\begin{enumerate}[a.]
     \item Поглощающие (не-отражающие) граничные условия используются при рассмотрении ограниченной под-области бесконечного физического региона. В данном случае водяной, придонный, газоносный слои и слой осадочных пород продолжаются за границы расчётной области налево, направо и, для газоносного слоя, вниз. Поэтому на их краях необходимо использовать поглощающие граничные условия. \footnote{Поглощающие условия будут рассмотрены подробнее в главе \ref{sec:absorbing}.}
     
     Для упругих сред это условие запишется в виде
@@ -160,6 +180,8 @@
     здесь верхний индекс $n$ обозначает момент времени $t_n$, а нижний --- номер сеточного узла, при этом узел $l$ является граничным, а узлы $l-1$ и $l-2$ --- его соседями по одной из осей. Такая форма записи будет верна для левой, правой и нижней границе при соответствующем выборе значений координатных индексов.
     
     \item Граничное условие нулевого давления применяется на границе сред с воздухом. В нашей задаче мы не учитываем влияние атмосферного давления на исследуемые процессы, считая его пренебрежимо малым. Следовательно мы принимаем $p=0$ на границах вода-воздух и лёд-воздух.
+    
+    \item Граничное условие постоянного давление задаёт давление здание на поверхность льда  $p=P_0$, не зависящее от времени.
 \end{enumerate}
 
 \subsection{Численный метод}
@@ -256,7 +278,8 @@
         \sqrt{\frac{\lambda^2 \rho}{4\left(\lambda+2\mu\right)}} & 0 & \frac{\lambda}{2\lambda + 4\mu} & 0 & 0 \\
         -\sqrt{\frac{\lambda^2 \rho}{4\left(\lambda+2\mu\right)}} & 0 & \frac{\lambda}{2\lambda + 4\mu} & 0 & 0
     \end{pmatrix}
-    \\
+\end{gather*}
+\begin{gather*}
     \pmb{S}^{-1}_2 = 
     \begin{pmatrix}
         0 & \frac{1}{\mu\rho} & -\frac{1}{\mu\rho} & 0 & 0 \\
@@ -274,7 +297,8 @@
         \sqrt{\frac{\lambda^2 \rho}{4\left(\lambda+2\mu\right)}} & 0 & \frac{\lambda}{2\lambda + 4\mu} & 0 & 0 \\
         -\sqrt{\frac{\lambda^2 \rho}{4\left(\lambda+2\mu\right)}} & 0 & \frac{\lambda}{2\lambda + 4\mu} & 0 & 0
     \end{pmatrix}
-    \\
+\end{gather*}
+\begin{gather*}
     \pmb{\Lambda}_1 = \pmb{\Lambda}_2 = 
     \begin{pmatrix}
         0 & 0 & 0 & 0 & 0\\
@@ -292,7 +316,7 @@
     \end{pmatrix}
 \end{gather*}
 
-Домножим первое уравнение системы \eqref{eq:rashepl_elastic} на $S_1$ слева, а второе --- на $S_2$ также слева, при этом диагонализуя матрицы $\pmb{A}$ и $\pmb{B}$.
+Домножим слева первое уравнение системы \eqref{eq:rashepl_elastic} на $S_1$  а второе --- на $S_2$, при этом диагонализуя матрицы $\pmb{A}$ и $\pmb{B}$.
 
 \begin{equation*}
 \begin{dcases}
@@ -358,11 +382,21 @@
 
 Заметим, что выбор метода решения одномерного уравнения переноса является открытым. При этом именно он определяет порядок аппроксимации всего сеточно-характеристического численного метода. Приведём несколько наиболее часто используемых схем для решения одномерного линейное уравнение переноса на скалярную величину $q$
 
-\begin{equation*}
-    \dfrac{\partial q}{\partial t} + \lambda \dfrac{\partial q}{\partial x} = 0
+\begin{equation}
+    \dfrac{\partial q}{\partial t} + \lambda \dfrac{\partial q}{\partial x} = 0 \quad \lambda =const
     \label{eq:lin_advection}
-\end{equation*}
-    
+\end{equation}
+
+Также будем использовать запись этого уравнения через поток $f$
+
+\begin{equation}
+\begin{gathered}
+    \dfrac{\partial q}{\partial t} + \dfrac{\partial f (u)}{\partial x} = 0 \\
+    f = \lambda u
+\end{gathered}
+\label{eq:lin_advection_flux}
+\end{equation}
+
 \subsubsection{Схема Куранта-Изаксона-Риса}
 %Courant, Richard; Isaacson, E; Rees, M. (1952). "On the Solution of Nonlinear Hyperbolic Differential Equations by Finite Differences". Comm. Pure Appl. Math. 5 (3): 243..255. doi:10.1002/cpa.3160050303.
 
@@ -373,7 +407,7 @@
     \label{fig:scheme_cir}
 \end{figure}
 
-Схема Куранта-Изаксона-Риса для решения уравнения \eqref{eq:lin_advection} определяется как
+Схема Куранта-Изаксона-Риса для решения уравнения \eqref{eq:lin_advection} определяется как \cite{cir_scheme} \cite{petrov_lobanov_book}
 
 \begin{equation*}
 \begin{dcases}
@@ -382,10 +416,10 @@
 \end{dcases}
 \end{equation*}
 
-Данная схема имеет первый порядок аппроксимации и является устойчивой при выполнении условия Куранта-Фридрихса-Леви
+Данная схема имеет первый порядок аппроксимации по времени и по пространству и является устойчивой при выполнении условия Куранта-Фридрихса-Леви
 
 \begin{equation}
-    \abs{\dfrac{\lambda \tau}{h}} \leq 1
+    C = \abs{\dfrac{\lambda \tau}{h}} \leq 1 
     \label{eq:cfl_condition}
 \end{equation}
 
@@ -394,14 +428,14 @@
 %http://www.mathnet.ru/links/2f4d9e5725a56dabadced5481c2ca461/zvmmf7067.pdf
 %https://www.intuit.ru/studies/courses/1170/213/lecture/5493?page=4
 
-\begin{figure}[htb]
+\begin{figure}[H]
     \centering
     \includegraphics[trim={55pt 100pt 35pt 100pt},clip,height=4cm]{images/theory/scheme_rusanov.png}
     \caption{Шаблон схемы Русанова третьего порядка аппроксимации.}
     \label{fig:scheme_rusanov}
 \end{figure}
 
-Схема Русанова использует промежуточные индексы и состоит из трёх этапов
+Схема Русанова использует промежуточные индексы и состоит из трёх этапов \cite{kholodov} \cite{petrov_lobanov_book}
 
 \begin{enumerate}
     \item Переход $t_n \rightarrow t_{n+\sfrac{1}{3}}$ производится по схеме Лакса
@@ -429,11 +463,52 @@
 
 Схема Русанова имеет третий порядок аппроксимации и является условно устойчивой при выполнении, в дополнении к условию Куранта-Фридрихса-Леви \eqref{eq:cfl_condition}, неравенства $4s^2 - s^4 \leq \omega \leq 3$, где $s = \frac{\tau}{h}$.
 
-\subsubsection{Контактные и граничные условия}
+\subsubsection{Схема TVD 2-го порядка аппроксимации}
+
+TVD-схемы позволяют решать задачи с большими градиентами, избегая появления осцилляций, вызванных дискретизацией задачи \cite{harten} \cite{rus_tvd} \cite{petrov_lobanov_book}. 
+
+Полная вариация (total variation) решения линейного уравнения переноса \eqref{eq:lin_advection} определяется как
+
+\begin{equation*}
+    \TV \left(q(\cdot, t)\right) = \int \abs{\dfrac{\partial q}{\partial x}} dx
+\end{equation*}
+
+Соответственно полная вариация численного решения 
+
+\begin{equation*}
+    \TV \left(q^n\right) = \TV \left(q(\cdot, t^n)\right) = \sum_i \left| q_{i+1}^n - q_i^n \right|
+\end{equation*}
+
+Схема называется схемой с уменьшением полной вариации, или TVD-схемой (total variation diminishing scheme), или схемой, монотонной по Хартену, если
+
+\begin{equation*}
+    \TV \left(q^{n+1}\right) \leq \TV \left(q^n\right)
+\end{equation*}
+
+В некоторых расчётах мы будем использовать TVD-схему 2-го порядка
+
+\begin{equation}
+\begin{gathered}
+    q_i^{n+1} = q_i^n - \dfrac{\tau}{h}\left(f_{i+\sfrac{1}{2}} - f_{i-\sfrac{1}{2}}\right) \\
+    f_{i+\sfrac{1}{2}} = \dfrac{f_i^n + f^n_{i+1}}{2} - \dfrac{\theta}{2}\left(f_{i+1}^n - f_i^n\right) + \dfrac{\phi_{sb}(r_i)}{2} \left(\theta - C\right) \left(f_{i+1}^n - f_i^n\right) \\
+    \theta = \sign C_{i+\sfrac{1}{2}}
+\end{gathered}
+\label{eq:tvd_scheme}
+\end{equation}
+
+с ограничителем superbee
+\begin{equation}
+    \phi_{sb}(r_i) = \max \left\{0, \min\{2r_i,1\}, \min\{r_i,2\}\right\}
+\end{equation}
+
+где
+\begin{equation*}
+    r_i = \dfrac{q_i - q_{i-1}}{q_{i+1} - q_i}
+\end{equation*}
 
 \subsection{Моделирование воздействия бура}
 
-Современные буры имеют довольно сложное устройство, зачастую  сочетая в себе ударные и вращательные механизмы. В данной работе нас в первую очередь интересует волновая картина, возникающая при бурении в конкретной геологической модели (см. рис. \autoref{fig:island}). Поэтому, для простоты, воздействие бура мы будет представлять в качестве точечного источника давления в виде импульса Рикера частотой 30 Гц.
+Современные буры имеют довольно сложное устройство, зачастую сочетая ударные и вращательные механизмы. В данной работе нас в первую очередь интересует волновая картина, возникающая при бурении в конкретной геологической модели (см. рис. \autoref{fig:island}). Поэтому, для простоты, воздействие бура мы будет представлять в качестве точечного источника давления в виде импульса Рикера частотой 30 Гц.
 \begin{equation}
     p(x,y) = \dfrac{1}{\pi \sigma^4} \left(1-\dfrac{1}{2}\left(\dfrac{x^2+y^2}{\sigma^2}\right)\right) \exp\left({-\frac{x^2+y^2}{2\sigma^2}}\right)
     \label{eq:ricker}
@@ -445,23 +520,6 @@
     \caption{График импульса Рикера \eqref{eq:ricker} при $\sigma=1$.}
     \label{fig:ricker_plot}
 \end{figure}
-
-%\begin{center}
-%   \begin{tikzpicture}
-%   \begin{axis}[
-%    title={$p(x,y)|_{\sigma=1}$}, 
- %       xlabel=$x$, ylabel=$y$,
-  %  	small,
-   % ]
-    %\addplot3[
-    %	surf,
-    %	domain=-4:4,
-    %	domain y=-4:4,
-    %] 
-    %	{1/(3.14)*(1-((x^2+y^2)/1)/2)*exp(-(x^2+y^2)/2)};
-  %  \end{axis}
- %   \end{tikzpicture}
-%\end{center}
 
 \begin{figure}[H]
     \centering
@@ -481,4 +539,5 @@
     \label{fig:wave_image}
 \end{figure}
 
-\subsection{Моделирование статической нагрузке (задача о штампе)}
+\subsection{Моделирование статической нагрузки}
+
