@@ -181,7 +181,7 @@
     
     \item Граничное условие нулевого давления применяется на границе сред с воздухом. В нашей задаче мы не учитываем влияние атмосферного давления на исследуемые процессы, считая его пренебрежимо малым. Следовательно мы принимаем $p=0$ на границах вода-воздух и лёд-воздух.
     
-    \item Граничное условие постоянного давление задаёт давление здание на поверхность льда  $p=P_0$, не зависящее от времени.
+    \item Граничное условие постоянного давление задаёт давление здания на поверхность льда  $p = \sigma_yy = P_0$, $\sigma_{xx} = \sigma_{xy} = 0$, не зависящее от времени.
 \end{enumerate}
 
 \subsection{Численный метод}
@@ -409,12 +409,13 @@
 
 Схема Куранта-Изаксона-Риса для решения уравнения \eqref{eq:lin_advection} определяется как \cite{cir_scheme} \cite{petrov_lobanov_book}
 
-\begin{equation*}
+\begin{equation}
 \begin{dcases}
     \dfrac{q_i^{n+1} - q_i^n}{\tau} + \lambda\dfrac{q_i^n - q_{i-1}^n}{h} = 0 & , \lambda > 0\\
     \dfrac{q_i^{n+1} - q_i^n}{\tau} + \lambda\dfrac{q_{i+1}^n - q_i^n}{h} = 0  & , \lambda < 0
 \end{dcases}
-\end{equation*}
+\label{eq:cir_scheme}
+\end{equation}
 
 Данная схема имеет первый порядок аппроксимации по времени и по пространству и является устойчивой при выполнении условия Куранта-Фридрихса-Леви
 
@@ -516,28 +517,92 @@ TVD-схемы позволяют решать задачи с большими 
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[trim={0pt 45pt 0pt 80pt},clip,width=0.7\textwidth]{images/gas_field/ricker_wavelet.png}
+    \includegraphics[trim={0px 45px 0px 80px},clip,width=0.7\textwidth]{images/gas_field/ricker_wavelet.png}
     \caption{График импульса Рикера \eqref{eq:ricker} при $\sigma=1$.}
     \label{fig:ricker_plot}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htb]
     \centering
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.05.png}
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.20.png}
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.40.png}\\
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.50.png}
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.565.png}
-    \includegraphics[trim={20cm 1cm 20cm 3cm},clip,width=0.32\textwidth]
-    {images/gas_field/0.595.png}
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={665px 65px 585px 65px},clip,width=1.00\textwidth]{images/gas_field/0.05.png}
+    \end{minipage}
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={665px 65px 585px 65px},clip,width=1.00\textwidth]{images/gas_field/0.20.png}
+    \end{minipage}
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={580px 65px 500px 65px},clip,width=1.00\textwidth]{images/gas_field/0.40.png}
+    \end{minipage}\\
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={580px 65px 500px 65px},clip,width=1.00\textwidth]{images/gas_field/0.50.png}
+    \end{minipage}
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={580px 65px 500px 65px},clip,width=1.00\textwidth]{images/gas_field/0.565.png}
+    \end{minipage}
+    \begin{minipage}[b]{.3\textwidth}
+        \centering
+        \includegraphics[trim={580px 65px 500px 65px},clip,width=1.00\textwidth]{images/gas_field/0.595.png}
+    \end{minipage}
     \caption{Волновая картина.}
     \label{fig:wave_image}
 \end{figure}
 
 \subsection{Моделирование статической нагрузки}
 
+Для решения задачи о распределении статической нагрузки (см. \autoref{fig:stamp_scheme}), воспользуемся методом установления \cite{fedorenko_relaxation}, решая при этом те же системы дифференциальных уравнений в частных производных \eqref{eq:acoustic_wave_eq} и \eqref{eq:elastic_wave_eq}. Будем считать распределение напряжений в ледовом острове установившимся, если модуль скорости распространения упругих волн оказывается в конечный момент времени в 20 -- 30 раз меньше по сравнению со значением скорости в  начальный моментом времени значением.
+
+Будем считать, что здание\footnote{Здесь под <<зданием>> мы понимаем некоторую покоящуюся конструкцию. Это может быть, например, техническое помещение, буровая установка или тяжёлое транспортное средство.}, расположенное на поверхности ледового острова, имеет массу 100 тонн и основание 5\texttimes 5 метров, тем самым производя на лёд давление величиной 4 кПа.
+
+Эта задача была решена с помощью схемы Куранта-Изаксона-Риса первого порядка \eqref{eq:cir_scheme} на регулярных прямоугольных сетках с шагом 0.5 \texttimes 0.5 м., шагом по времени 0.02 мс.
+
+Было выполнено 200 тыс. шагов, за это время модуль скорости упал с примерно в 33 раза с $2.4\cdot10^{-4}$ м/c до $7.3\cdot10^{-6}$ м/c. Таким образом, получившееся распределение напряжений можно считать установившимся.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{images/stamp/stamp_syy.png}
+    \caption{Распределение вертикальной компоненты тензора напряжений $\sigma_{yy}$.}
+    \label{fig:stamp_syy}
+\end{figure}
+
+Так как внешними условиями заданно только давление здания, направленное вертикально вниз, то естественно, что $\sigma_{yy}$ будет составлять большую часть от итогового суммарного давления $p$ или напряжения фон Мизеса $\sigma_\nu$. Для того, чтобы в этом убедиться, достаточно сравнить распределение $\sigma_{yy}$, изображённое на \autoref{fig:stamp_syy}, с распределениями горизонтальной и смешанной компонент тензора напряжений $\sigma_{xx}$ и $\sigma_{xy}$, представленными на \autoref{fig:stamp_sxx} и \autoref{fig:stamp_sxy}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/stamp/stamp_sxx.png}
+    \caption{Распределение горизонтальной компоненты тензора напряжений $\sigma_{xx}$ в ледовом острове при статической нагрузке.}
+    \label{fig:stamp_sxx}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/stamp/stamp_sxy.png}
+    \caption{Распределение смешанной компоненты тензора напряжений $\sigma_{xy}$ в ледовом острове при статической нагрузке.}
+    \label{fig:stamp_sxy}
+\end{figure}
+
+Рассмотрим теперь распределения давления $p$ (\autoref{fig:stamp_p}), напряжения фон Мизеса (\autoref{fig:stamp_mises}).
+
+Из приведённых распределений хорошо видно, что, кроме цилиндра непосредственно под зданием, наиболее подверженными разрушению областями являются конусообразные области радиусом около 20 метров, находящиеся в приблизительно 2 метрах от поверхности. Причём вблизи свободной поверхности данные области подвержены растягивающим напряжениям (см. \autoref{fig:stamp_p}), а вблизи границы с придонным слоем --- сдавливающим.
+
+При этом максимальное достигаемое напряжение фон Мизеса $\max_{i,j} \sigma_\nu\left(x_i, y_j\right) \approx 2.2$ кПа. Это значение много меньше предела разрушения льда, равному 1 Мпа, откуда следует, что при реалистичных значениях статической нагрузки (в нашем случае 1000 тонн), ледовый остров не будет разрушаться.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{images/stamp/stamp_p.png}
+    \caption{Распределение давления $p$ в ледовом острове при статической нагрузке.}
+    \label{fig:stamp_p}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{images/stamp/stamp_mises.png}
+    \caption{Распределение напряжения фон Мизеса $\sigma_\nu$ в ледовом острове при статической нагрузке.}
+    \label{fig:stamp_mises}
+\end{figure}
+
+\subsection{Выводы}
