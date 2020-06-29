@@ -1,19 +1,14 @@
 \documentclass[12pt,a4paper]{article}
 
-% \usepackage{mathptmx} %Times New Roman
-
-\usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage[T2A,T1]{fontenc}
 \usepackage[english,russian]{babel}
 
-\usepackage[a4paper,showframe]{geometry}
+\usepackage[a4paper]{geometry} % showframe
 \geometry{left=3cm}
 \geometry{right=2cm}
 \geometry{top=2cm}
 \geometry{bottom=2cm}
-
-\usepackage{setspace}
-\linespread{1.5}
 
 \usepackage{amsmath}
 \DeclareMathOperator{\Div}{div}
@@ -27,36 +22,66 @@
 \usepackage{hyperref}
 \usepackage[dvipsnames]{xcolor}
 
-%\usepackage{pgfplots}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.9}
+
 \usepackage{float}
 \usepackage{commath}
 \usepackage{xfrac}
+\usepackage{tempora}
+\usepackage{indentfirst}
 
 \usepackage[compact]{titlesec}
-\titleformat{\section}
-{\newpage\normalfont\Large\bfseries}{\thesection.}{1em}{}
-%\titlespacing*{\chapter}{0pt}{0pt}{0pt}
+\newcommand{\sectionbreak}{\clearpage}
 
-\usepackage{hyperref}
+\titleformat{\section}{\normalfont\LARGE\bfseries}{\thesection.}{1em}{\setstretch{0.1}}
+\titleformat{\subsection}{\normalfont\Large\bfseries}{\thesubsection.}{1em}{\setstretch{0.1}}
+\titleformat{\subsubsection}{\normalfont\large\bfseries}{\thesubsubsection.}{1em}{}
+
 \usepackage[shortlabels]{enumitem}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{setspace}
+
+\usepackage{csquotes}
+\usepackage[%
+  style=ieee,
+  sorting=none,
+  bibencoding=utf8,
+  backend=biber,
+  autolang=other,
+  %language=auto,
+  date=year,
+  url=false,
+  doi=false,
+  isbn=false
+]{biblatex}
+\addbibresource{ref.bib}
+
 
 \begin{document}
 
-\input{0_title_page}
+%\singlespacing
+%\input{0_title_page}
+\onehalfspacing
 
+\addtocounter{page}{1}
 \input{0_annotation}
 
+\singlespacing
 \tableofcontents
+\onehalfspacing
 
 \newpage
 
 \input{1_introduction}
 
-\input{2_island}
+\input{3_island}
 
 \input{4_abscorbing}
 
-\bibliographystyle{unsrt}
-\bibliography{bibliography}
+\input{5_conclusion}
+
+\printbibliography[heading=bibintoc]
 
 \end{document}
