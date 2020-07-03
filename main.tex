@@ -28,7 +28,7 @@
 \usepackage{float}
 \usepackage{commath}
 \usepackage{xfrac}
-\usepackage{tempora}
+%\usepackage{tempora}
 \usepackage{indentfirst}
 
 \usepackage[compact]{titlesec}
@@ -44,25 +44,15 @@
 \usepackage{setspace}
 
 \usepackage{csquotes}
-\usepackage[%
-  style=ieee,
-  sorting=none,
-  bibencoding=utf8,
-  backend=biber,
-  autolang=other,
-  %language=auto,
-  date=year,
-  url=false,
-  doi=false,
-  isbn=false
-]{biblatex}
+\usepackage [style=ieee, sorting=none, bibencoding=utf8, backend=biber, autolang=other, date=year, url=false,doi=false, isbn=false]{biblatex}
 \addbibresource{ref.bib}
 
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
 
 \begin{document}
 
 %\singlespacing
-%\input{0_title_page}
+%\input{-1_title_page}
 \onehalfspacing
 
 \addtocounter{page}{1}
@@ -76,11 +66,17 @@
 
 \input{1_introduction}
 
-\input{3_island}
+\input{2_island}
 
-\input{4_abscorbing}
+\input{3_abscorbing}
 
-\input{5_conclusion}
+\input{4_conclusion}
+
+\section*{Благодарности}
+Я хотел бы поблагодарить своего научного руководителя профессора Игоря Борисовича Петрова за постановку  задачи и ценные обсуждения. Также я хотел бы поблагодарить Николая Игоревича Хохлова за оказанную помощь при исследовании поглощающих граничных условий.
+
+\addcontentsline{toc}{section}{Благодарности}
+\newpage
 
 \printbibliography[heading=bibintoc]
 
